@@ -51,11 +51,11 @@ func GetTemplateGroup(is_multi_where bool, col string) string {
 	return ext + col + " IS NOT NULL AND trim(" + col + ") != '' GROUP BY " + col + " "
 }
 
-func GetTemplateLogic(name string) string {
+func GetTemplateLogic(tableName, name string) string {
 	if name == "active" {
-		return ".deleted_at IS NULL "
+		return tableName + ".deleted_at IS NULL "
 	} else if name == "trash" {
-		return ".deleted_at IS NOT NULL "
+		return tableName + ".deleted_at IS NOT NULL "
 	}
 	return ""
 }
