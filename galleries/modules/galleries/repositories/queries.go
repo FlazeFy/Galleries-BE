@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 	"galleries/modules/galleries/models"
 	"galleries/packages/builders"
 	"galleries/packages/database"
@@ -28,11 +27,12 @@ func GetAllGalleries(page, pageSize int, path string) (response.Response, error)
 
 	// Query builder
 	selectTemplate := builders.GetTemplateSelect("content_info", &baseTable, nil)
+	propsTemplate := builders.GetTemplateSelect("properties", nil, nil)
 	whereTemplate := builders.GetTemplateLogic(baseTable, "active")
 	where := "is_private = 0"
 	order := "created_at, galleries_name DESC "
 
-	sqlStatement = "SELECT " + selectTemplate + ", galleries_desc, galleries_tag, galleries_format " +
+	sqlStatement = "SELECT " + selectTemplate + ", galleries_desc, galleries_url, galleries_tag, galleries_format," + propsTemplate + " " +
 		"FROM " + baseTable + " " +
 		"WHERE " + where + " AND " + whereTemplate + " " +
 		"ORDER BY " + order +
@@ -42,7 +42,6 @@ func GetAllGalleries(page, pageSize int, path string) (response.Response, error)
 	con := database.CreateCon()
 	offset := (page - 1) * pageSize
 	rows, err := con.Query(sqlStatement, pageSize, offset)
-	fmt.Println(sqlStatement)
 	defer rows.Close()
 
 	if err != nil {
@@ -55,6 +54,7 @@ func GetAllGalleries(page, pageSize int, path string) (response.Response, error)
 			&obj.GallerySlug,
 			&obj.GalleryName,
 			&GalleryDesc,
+			&obj.GalleryUrl,
 			&GalleryTag,
 			&obj.GalleryFormat,
 			&obj.CreatedAt,
@@ -101,6 +101,85 @@ func GetAllGalleries(page, pageSize int, path string) (response.Response, error)
 			"to":             pagination.To,
 			"total":          total,
 		}
+	}
+
+	return res, nil
+}
+
+func GetGalleryBySlug(path, slug string) (response.Response, error) {
+	// Declaration
+	var obj models.GetGalleryDetail
+	var arrobj []models.GetGalleryDetail
+	var res response.Response
+	var baseTable = "galleries"
+	var sqlStatement string
+
+	// Nullable column
+	var GalleryDesc sql.NullString
+	var GalleryTag sql.NullString
+	var UpdatedAt sql.NullString
+	var UpdatedBy sql.NullString
+
+	// Query builder
+	selectTemplate := builders.GetTemplateSelect("content_info", &baseTable, nil)
+	propsTemplate := builders.GetTemplateSelect("properties_detail", nil, nil)
+	whereTemplate := builders.GetTemplateLogic(baseTable, "active")
+	where := "is_private = 0"
+
+	sqlStatement = "SELECT " + selectTemplate + ", galleries_desc, galleries_url, galleries_tag, galleries_format," + propsTemplate + " " +
+		"FROM " + baseTable + " " +
+		"WHERE " + where + " AND " + whereTemplate + " AND galleries_slug = '" + slug + "'" +
+		"LIMIT 1"
+
+	// Exec
+	con := database.CreateCon()
+	rows, err := con.Query(sqlStatement)
+	defer rows.Close()
+
+	if err != nil {
+		return res, err
+	}
+
+	// Map
+	for rows.Next() {
+		err = rows.Scan(
+			&obj.GallerySlug,
+			&obj.GalleryName,
+			&GalleryDesc,
+			&obj.GalleryUrl,
+			&GalleryTag,
+			&obj.GalleryFormat,
+			&obj.CreatedAt,
+			&obj.CreatedBy,
+			&UpdatedAt,
+			&UpdatedBy,
+		)
+
+		if err != nil {
+			return res, err
+		}
+
+		obj.GalleryDesc = converter.CheckNullString(GalleryDesc)
+		obj.GalleryTag = converter.CheckNullString(GalleryTag)
+		obj.UpdatedAt = converter.CheckNullString(UpdatedAt)
+		obj.UpdatedBy = converter.CheckNullString(UpdatedBy)
+
+		arrobj = append(arrobj, obj)
+	}
+
+	// Page
+	total, err := builders.GetTotalCount(con, baseTable, &where)
+	if err != nil {
+		return res, err
+	}
+
+	// Response
+	res.Status = http.StatusOK
+	res.Message = generator.GenerateQueryMsg(baseTable, total)
+	if total == 0 {
+		res.Data = nil
+	} else {
+		res.Data = arrobj
 	}
 
 	return res, nil

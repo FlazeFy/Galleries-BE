@@ -4,7 +4,9 @@ func GetTemplateSelect(name string, firstTable, secondTable *string) string {
 	if name == "content_info" {
 		return *firstTable + "_slug," + *firstTable + "_name"
 	} else if name == "properties" {
-		return "created_at, updated_at"
+		return "created_at, created_by"
+	} else if name == "properties_detail" {
+		return "created_at, created_by, updated_at, updated_by"
 	}
 	return ""
 }
