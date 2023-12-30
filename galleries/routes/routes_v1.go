@@ -21,6 +21,8 @@ func InitV1() *echo.Echo {
 	// =============== Public routes ===============
 	// Dictionary
 	e.GET("api/v1/dct/:type", syshandlers.GetDictionaryByType)
+	e.DELETE("api/v1/dct/destroy/:id", syshandlers.HardDelDictionaryById)
+	e.POST("api/v1/dct", syshandlers.PostDictionary)
 
 	// Gallery
 	e.GET("api/v1/gallery", galhandlers.GetGalleries)

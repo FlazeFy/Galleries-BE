@@ -44,6 +44,15 @@ func GetTemplateJoin(typeJoin, firstTable, firstCol, secondTable, secondCol stri
 	return ""
 }
 
+func GetTemplateCommand(name, tableName, colName string) string {
+	if name == "soft_delete" {
+		return "UPDATE " + tableName + " SET deleted_at = ?, deleted_by = ? WHERE " + tableName + "." + colName + " = ?"
+	} else if name == "hard_delete" {
+		return "DELETE FROM " + tableName + " WHERE " + tableName + "." + colName + " = ?"
+	}
+	return ""
+}
+
 func GetTemplateGroup(is_multi_where bool, col string) string {
 	var ext = " WHERE "
 	if is_multi_where {
