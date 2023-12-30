@@ -27,6 +27,8 @@ func InitV1() *echo.Echo {
 	// Gallery
 	e.GET("api/v1/gallery", galhandlers.GetGalleries)
 	e.GET("api/v1/gallery/:slug", galhandlers.GetGalleryBySlug)
+	e.DELETE("api/v1/gallery/destroy/:slug", galhandlers.HardDelGalleryBySlug)
+	e.POST("api/v1/gallery", galhandlers.PostGallery)
 
 	return e
 }
