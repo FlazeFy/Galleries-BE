@@ -6,4 +6,7 @@ type (
 		DctType string `json:"dictionary_name"`
 		DctName string `json:"dictionary_desc"`
 	}
+	GetDictionaryByMyTag struct {
+		DctName string `json:"dictionary_desc"`
+	}
 )
